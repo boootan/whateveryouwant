@@ -6,12 +6,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
 import requests
+from json2db import json2db
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
 df = pandas.read_csv("business_data.csv", engine='python', index_col=False)
-df['index'] = range(0, len(df))
 
-userLocation = "2125 Chestnut St, Philadelphia, PA 19103"
+
+userLocation = ""
 
 class business:
     def __init__(self, index):
@@ -34,14 +35,9 @@ def getDistance(destination):
     return round((dist/1000)*0.621371, 2)
         
 def readBusinesses():
-    f = open('yelp_academic_dataset_business.json', 'r', encoding="utf8")
-    input = [json.loads(line) for line in f]
-    business = []
-    f.close()
-    for i in input:
-        if i['city'] == "Philadelphia":
-            business.append(i)
-    return business
+    global df
+    df = pandas.read_csv("business_data.csv", engine='python', index_col=False)
+    df['index'] = range(0, len(df))
 
 
 def index_from_name(name):
@@ -74,7 +70,22 @@ def sanitizeChains(ranked_similar_restaurants, name):
     
 
 def main():
+    city = input("Hi! What city are you located in? ")
+    global userLocation 
+    userLocation = input("What is your location? Please enter address format i.e 800 N State College Blvd, Fullerton CA 92831: ")
+    keyword = input("What kind of food are you feeling? i.e. Mexican, Pizza, Chinese")
+    json2db(city, keyword)
+    readBusinesses()
     factors = ['categories']
+    randomsample = df['name'].sample(n = 10, index=range(1,10))
+    count = 1
+    for i in randomsample:
+        print("{}: {}".format(randomsample.where(i), i))
+        count += 1
+
+    like = input("Above is a random sample of restaurants in your area, if you like any of them, or any of them sound good please tell us the number: ")
+    restaurant_user_likes = randomsample[like-1]
+    
 
     for factor in factors:
         df[factor] = df[factor].fillna('')
@@ -84,8 +95,6 @@ def main():
 
     cosine_sim = cosine_similarity(count_matrix)
     numpy.savetxt('F:/array.txt', cosine_sim)
-
-    restaurant_user_likes = "Xochitl"
 
     restaurant_index = index_from_name(restaurant_user_likes)
 
@@ -114,6 +123,5 @@ def main():
         print(i.name, i.distance, i.stars)
 
     
-
 if __name__ == '__main__':
     main()
