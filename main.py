@@ -5,16 +5,33 @@ import json
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
+import requests
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
 df = pandas.read_csv("business_data.csv", engine='python', index_col=False)
 df['index'] = range(0, len(df))
 
-class business():
-    def __init__():
-        name = ""
-        dfIndex = None
-        location = (0, 0)
+userLocation = "2125 Chestnut St, Philadelphia, PA 19103"
+
+class business:
+    def __init__(self, index):
+        self.dfIndex = index
+        self.id = dfLookup(index, 'business_id')
+        self.name = dfLookup(index, 'name')
+        self.street = dfLookup(index, 'address')
+        self.city = dfLookup(index,'city')
+        self.state = dfLookup(index,'state')
+        self.zip = dfLookup(index, 'postal_code')
+        self.address = str(self.street) + str(self.city) + str(self.state) + str(self.zip)
+        self.distance = getDistance(self.address)
+        self.stars = dfLookup(index, 'stars')
+
+def getDistance(destination):
+    url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
+    r = requests.get(url + 'origins='+userLocation + '&destinations=' + destination+'&key='+API_KEY)
+    x = r.json()
+    dist = x['rows'][0]['elements'][0]['distance']['value']
+    return round((dist/1000)*0.621371, 2)
         
 def readBusinesses():
     f = open('yelp_academic_dataset_business.json', 'r', encoding="utf8")
@@ -26,17 +43,6 @@ def readBusinesses():
             business.append(i)
     return business
 
-def readUsers():
-    f = open('yelp_academic_dataset_user.json', 'r', encoding="utf8")
-    user = [json.loads(line) for line in f]
-    f.close()
-    return user
-
-def readReviews():
-    f = open('yelp_academic_dataset_review.json', 'r', encoding="utf8")
-    user = [json.loads(line) for line in f]
-    f.close()
-    return user
 
 def index_from_name(name):
     return df[df.name == name]["index"].values[0]
@@ -75,7 +81,6 @@ def main():
 
     cv = CountVectorizer()
     count_matrix = cv.fit_transform(df["categories"])
-    print("Count Matrix:", count_matrix.toarray())
 
     cosine_sim = cosine_similarity(count_matrix)
     numpy.savetxt('F:/array.txt', cosine_sim)
@@ -92,15 +97,23 @@ def main():
 
     top25 = sanitizeChains(ranked_similar_restaurants, restaurant_user_likes)
 
-    print(top25.values())
+    top25list = []
+    for key in top25.keys():
+        obj = business(key)
+        top25list.append(obj)
+    
+    distLimit = 2.0
+
+    for i in top25list:
+        if i.distance > distLimit:
+            top25list.remove(i)
+
+    top25list.sort(key=lambda x: x.distance)
+        
+    for i in top25list:
+        print(i.name, i.distance, i.stars)
 
     
-    
-
-    
-    
-
-
 
 if __name__ == '__main__':
     main()
