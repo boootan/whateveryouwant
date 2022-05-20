@@ -35,6 +35,7 @@ yelp_academic_dataset_tip.json
 yelp_academic_dataset_user.json
 Dataset_User_Agreement.pdf
 yelp_dataset
+launch.json
 
 # Windows shortcuts
 *.lnk
