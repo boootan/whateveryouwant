@@ -36,6 +36,7 @@ yelp_academic_dataset_user.json
 Dataset_User_Agreement.pdf
 yelp_dataset
 launch.json
+evalMetrics.py
 
 # Windows shortcuts
 *.lnk

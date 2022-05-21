@@ -3,6 +3,7 @@ import sys
 import pandas
 import numpy
 import json
+import time
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
@@ -101,6 +102,7 @@ def main():
         df[factor] = df[factor].fillna('')
 
     #create restaurant matrix to run similarity check on
+    
     cv = CountVectorizer()
     count_matrix = cv.fit_transform(df["categories"])
 
@@ -124,13 +126,14 @@ def main():
     for key in top25.keys():
         obj = business(key)
         top25list.append(obj)
-    
+
+
     #code to filter out restaurants too far outside user's travel radius.
     
-
     for i in top25list:
         if i.distance > distLimit:
             top25list.remove(i)
+
 
     #top25list.sort(key=lambda x: x.distance)
         
@@ -151,6 +154,8 @@ def main():
         exitmsg = input("\nHope you enjoy your meal! You can hit enter to see more recommendations, or enter Q to quit. ")
         if exitmsg == "Q":
             sys.exit()
+
+    
 
 
     
